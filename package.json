@@ -1,17 +1,19 @@
 {
-    "name": "new",
+    "name": "document-preview",
     "version": "1.0.0",
     "description": "",
     "keywords": [],
     "homepage": "https://codesandbox.io/s/new",
     "main": "src/index.js",
     "dependencies": {
+        "bootstrap": "3.3.7",
         "react": "16.2.0",
         "react-bootstrap": "0.31.2",
         "react-dom": "16.2.0",
         "react-pdf": "2.5.3",
         "react-pdf-js": "3.0.7",
-        "react-scripts": "1.1.0"
+        "react-scripts": "1.1.0",
+        "react-virtualized": "9.18.5"
     },
     "devDependencies": {},
     "scripts": {

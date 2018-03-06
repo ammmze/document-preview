@@ -41,22 +41,13 @@
 }
 .document-preview-modal .modal-body {
     flex-grow: 1;
-    overflow-x: hidden;
+    overflow-x: auto;
     overflow-y: auto;
     position: relative;
-}
-
-.document-preview-modal .modal-body .modal-body-container {
-    overflow-x: auto;
-}
-
-.document-preview-modal .pdf-container {
+    padding: 0;
     text-align: center;
 }
 
-@media (min-width: 768px) {
-    .document-preview-modal .modal-body .modal-body-container {
-        width: 768px;
-        margin: 0 auto;
-    }
+.document-preview-modal .ReactPDF__Page__canvas {
+    margin: 15px auto;
 }

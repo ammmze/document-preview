@@ -1,10 +1,12 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import PDF from 'react-pdf-js';
-import { Document, Page } from 'react-pdf/dist/entry.noworker';
+import { Document, Page } from 'react-pdf/build/entry.noworker';
 import { Modal } from 'react-bootstrap';
+import { AutoSizer, List } from 'react-virtualized';
 import PdfControls from './PdfControls';
 import './DocumentPreview.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 // https://github.com/mikecousins/react-pdf-js/blob/master/src/Pdf.jsx#L26
 const calculateScale = (scale, fillWidth, fillHeight, view, parentElement) => {
@@ -35,7 +37,7 @@ export default class DocumentPreview extends React.Component {
         this.state.fitTo = props.fitTo;
     }
 
-    onDocumentComplete = pages => {
+    onDocumentLoad = ({ numPages: pages }) => {
         this.setState({ page: 1, pages });
     };
 
@@ -43,66 +45,27 @@ export default class DocumentPreview extends React.Component {
         this.setState({ page });
     };
 
-    handlePrevious = () => {
-        this.setState({ page: this.state.page - 1 });
-    };
-
-    handleNext = () => {
-        this.setState({ page: this.state.page + 1 });
-    };
-
-    renderPagination = (page, pages) => {
-        let previousButton = (
-            <li className="previous" onClick={this.handlePrevious}>
-                <a href="#">
-                    <i className="fa fa-arrow-left" /> Previous
-                </a>
-            </li>
-        );
-        if (page === 1) {
-            previousButton = (
-                <li className="previous disabled">
-                    <a href="#">
-                        <i className="fa fa-arrow-left" /> Previous
-                    </a>
-                </li>
-            );
-        }
-        let nextButton = (
-            <li className="next" onClick={this.handleNext}>
-                <a href="#">
-                    Next <i className="fa fa-arrow-right" />
-                </a>
-            </li>
-        );
-        if (page === pages) {
-            nextButton = (
-                <li className="next disabled">
-                    <a href="#">
-                        Next <i className="fa fa-arrow-right" />
-                    </a>
-                </li>
-            );
-        }
+    renderPage = ({
+        index, // Index of row
+        isScrolling, // The List is currently being scrolled
+        isVisible, // This row is visible within the List (eg it is not an overscanned row)
+        key, // Unique key within array of rendered rows
+        parent, // Reference to the parent List (instance)
+        style // Style object to be applied to row (to position it); This must be passed through to the rendered row element.
+    }) => {
+        const { scale } = this.state;
         return (
-            <nav>
-                <ul className="pager">
-                    {previousButton}
-                    {nextButton}
-                </ul>
-            </nav>
+            <Page
+                key={key}
+                style={style}
+                scale={scale}
+                pageNumber={index + 1}
+            />
         );
     };
 
     render() {
-        const { fitTo, scale } = this.state;
-        let pagination = null;
-        if (this.state.pages) {
-            pagination = this.renderPagination(
-                this.state.page,
-                this.state.pages
-            );
-        }
+        const { fitTo, scale, pages } = this.state;
         return (
             <div>
                 <Modal
@@ -116,8 +79,43 @@ export default class DocumentPreview extends React.Component {
                         </div>
                     </Modal.Header>
                     <Modal.Body>
-                        <div className="modal-body-container">
-                            <div className="pdf-container">
+                        {
+                            <Document
+                                file={this.props.file}
+                                onLoadSuccess={this.onDocumentLoad}
+                            >
+                                {[...Array(pages).keys()].map(index =>
+                                    this.renderPage({
+                                        index,
+                                        key: `page-${index}`
+                                    })
+                                )}
+                                {/*react-virtualized scrolling...to enhance performance*/
+                                /*documentProps => (
+                                            <AutoSizer>
+                                                {({ height, width }) => (
+                                                    <List
+                                                        height={height}
+                                                        rowCount={pages}
+                                                        rowHeight={20}
+                                                        rowRenderer={this.renderPage.bind(
+                                                            this,
+                                                            documentProps
+                                                        )}
+                                                        width={width}
+                                                    />
+                                                )}
+                                            </AutoSizer>
+                                        )*/}
+                            </Document>
+                        }
+                        {
+                            /*so...currently have this other pdf library in here because 
+                                it the other react-pdf library doesnt seem to render the pages 
+                                without it...i suspect something with the worker thread and im 
+                                guessing the react-pdf-js library does something else to get 
+                                the worker running*/
+                            <div style={{ display: 'none' }}>
                                 <PDF
                                     className="pdf-document"
                                     scale={scale}
@@ -127,14 +125,16 @@ export default class DocumentPreview extends React.Component {
                                     page={this.state.page}
                                 />
                             </div>
-                            {pagination}
-                        </div>
+                        }
                     </Modal.Body>
                     <PdfControls
-                        onZoomToFit={() => this.setState({ scale: 1 })}
-                        onZoomIn={() => this.setState({ scale: scale + 0.1 })}
+                        fitTo={fitTo}
+                        onZoomToFit={fitTo =>
+                            this.setState({ scale: 1, fitTo })
+                        }
+                        onZoomIn={() => this.setState({ scale: scale * 1.1 })}
                         onZoomOut={() =>
-                            this.setState({ scale: Math.max(0.1, scale - 0.1) })
+                            this.setState({ scale: Math.max(0.1, scale * 0.9) })
                         }
                     />
                     {this.props.footer && (
