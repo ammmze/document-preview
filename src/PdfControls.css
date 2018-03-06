@@ -1,0 +1,19 @@
+.pdf-controls {
+    position: relative;
+}
+.pdf-controls-container {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.pdf-controls button {
+    width: 1.75em;
+    height: 1.75em;
+    font-size: 18px;
+    border-radius: 100%;
+    margin: 0.25em;
+    border: 1px solid lightgrey;
+}
