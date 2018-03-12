@@ -1,131 +1,90 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import PDF from 'react-pdf-js';
-import { Document, Page } from 'react-pdf/build/entry.noworker';
+import _ from 'underscore';
+import { Document } from './ReactPdf';
 import { Modal } from 'react-bootstrap';
-import { AutoSizer, List } from 'react-virtualized';
+import PageList from './PageList';
+import PdfDocument from './PdfDocument';
 import PdfControls from './PdfControls';
 import './DocumentPreview.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import 'react-pdf/build/annotation_layer_builder.css';
 
-// https://github.com/mikecousins/react-pdf-js/blob/master/src/Pdf.jsx#L26
-const calculateScale = (scale, fillWidth, fillHeight, view, parentElement) => {
-    if (fillWidth) {
-        const pageWidth = view[2] - view[0];
-        return parentElement.clientWidth / pageWidth;
-    }
-    if (fillHeight) {
-        const pageHeight = view[3] - view[1];
-        return parentElement.clientHeight / pageHeight;
-    }
-    return scale;
-};
+const noop = () => {};
 
-export default class DocumentPreview extends React.Component {
+export default class DocumentPreview extends React.PureComponent {
     static propTypes = {
-        fitTo: PropTypes.oneOf(['page', 'width'])
+        ...Modal.propTypes,
+        fitTo: PropTypes.oneOf(['page', 'width']),
+        toolbar: PropTypes.node
     };
     static defaultProps = {
-        fitTo: 'page'
+        fitTo: 'page',
+        show: false,
+        onClose: noop
     };
+    static modalPropTypes = _.keys(Modal.propTypes);
     state = {
-        scale: 1
+        scale: 1,
+        loadedPages: {}
     };
 
     constructor(props) {
         super(props);
         this.state.fitTo = props.fitTo;
+        this.state.show = props.show;
     }
 
-    onDocumentLoad = ({ numPages: pages }) => {
+    handleDocumentLoaded = ({ numPages: pages }) => {
         this.setState({ page: 1, pages });
     };
 
-    onPageComplete = page => {
-        this.setState({ page });
-    };
+    handlePageChange = page => this.setState({ page });
 
-    renderPage = ({
-        index, // Index of row
-        isScrolling, // The List is currently being scrolled
-        isVisible, // This row is visible within the List (eg it is not an overscanned row)
-        key, // Unique key within array of rendered rows
-        parent, // Reference to the parent List (instance)
-        style // Style object to be applied to row (to position it); This must be passed through to the rendered row element.
-    }) => {
-        const { scale } = this.state;
-        return (
-            <Page
-                key={key}
-                style={style}
-                scale={scale}
-                pageNumber={index + 1}
-            />
-        );
+    close = () => {
+        this.setState({ show: false });
+        this.props.onClose();
     };
 
     render() {
-        const { fitTo, scale, pages } = this.state;
+        const { fitTo, scale, pages: pageCount, show } = this.state;
+        const { toolbar } = this.props;
         return (
             <div>
                 <Modal
+                    {..._.pick(this.props, this.modalPropTypes)}
                     className={`document-preview-modal fit-to-${fitTo}`}
-                    show={true}
+                    show={show}
                 >
-                    <Modal.Header closeButton>
-                        <Modal.Title>Modal heading</Modal.Title>
+                    <Modal.Header>
                         <div>
-                            Page {this.state.page} of {this.state.pages}
+                            <Modal.Title>Modal heading</Modal.Title>
+                            {pageCount && (
+                                <div className="page-counter">
+                                    Page {this.state.page} of {pageCount}
+                                </div>
+                            )}
+                        </div>
+                        <div className="toolbar">
+                            {toolbar}
+                            <button
+                                type="button"
+                                className="close"
+                                onClick={this.close}
+                            >
+                                <span aria-hidden="true">×</span>
+                                <span className="sr-only">Close</span>
+                            </button>
                         </div>
                     </Modal.Header>
                     <Modal.Body>
-                        {
-                            <Document
-                                file={this.props.file}
-                                onLoadSuccess={this.onDocumentLoad}
-                            >
-                                {[...Array(pages).keys()].map(index =>
-                                    this.renderPage({
-                                        index,
-                                        key: `page-${index}`
-                                    })
-                                )}
-                                {/*react-virtualized scrolling...to enhance performance*/
-                                /*documentProps => (
-                                            <AutoSizer>
-                                                {({ height, width }) => (
-                                                    <List
-                                                        height={height}
-                                                        rowCount={pages}
-                                                        rowHeight={20}
-                                                        rowRenderer={this.renderPage.bind(
-                                                            this,
-                                                            documentProps
-                                                        )}
-                                                        width={width}
-                                                    />
-                                                )}
-                                            </AutoSizer>
-                                        )*/}
-                            </Document>
-                        }
-                        {
-                            /*so...currently have this other pdf library in here because 
-                                it the other react-pdf library doesnt seem to render the pages 
-                                without it...i suspect something with the worker thread and im 
-                                guessing the react-pdf-js library does something else to get 
-                                the worker running*/
-                            <div style={{ display: 'none' }}>
-                                <PDF
-                                    className="pdf-document"
-                                    scale={scale}
-                                    file={this.props.file}
-                                    onDocumentComplete={this.onDocumentComplete}
-                                    onPageComplete={this.onPageComplete}
-                                    page={this.state.page}
-                                />
-                            </div>
-                        }
+                        <PdfDocument
+                            file={this.props.file}
+                            scale={scale}
+                            fitTo={fitTo}
+                            onLoad={this.handleDocumentLoaded}
+                            onPageChange={this.handlePageChange}
+                        />
                     </Modal.Body>
                     <PdfControls
                         fitTo={fitTo}

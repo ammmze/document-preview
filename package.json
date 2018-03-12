@@ -11,9 +11,10 @@
         "react-bootstrap": "0.31.2",
         "react-dom": "16.2.0",
         "react-pdf": "2.5.3",
-        "react-pdf-js": "3.0.7",
         "react-scripts": "1.1.0",
-        "react-virtualized": "9.18.5"
+        "react-virtualized": "9.18.5",
+        "react-waypoint": "8.0.1",
+        "underscore": "1.8.3"
     },
     "devDependencies": {},
     "scripts": {

@@ -13,6 +13,24 @@
 }
 .document-preview-modal .modal-header {
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.document-preview-modal .modal-header .modal-title {
+    font-size: 2.5em;
+}
+.document-preview-modal .modal-header::before,
+.document-preview-modal .modal-header .toolbar {
+    flex: 1;
+    display: block;
+}
+.document-preview-modal .modal-header .toolbar {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    flex-wrap: wrap;
 }
 .document-preview-modal .modal-header button.close {
     box-sizing: content-box;
@@ -40,14 +58,14 @@
     border: 0;
 }
 .document-preview-modal .modal-body {
-    flex-grow: 1;
-    overflow-x: auto;
-    overflow-y: auto;
+    flex: 1;
     position: relative;
     padding: 0;
     text-align: center;
+    overflow: hidden;
 }
 
-.document-preview-modal .ReactPDF__Page__canvas {
-    margin: 15px auto;
+.document-preview-modal button:focus {
+    outline: none;
+    box-shadow: 0 0 3px 2px #b2f2ff;
 }

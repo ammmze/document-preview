@@ -1,23 +1,59 @@
 import React from 'react';
 import { render } from 'react-dom';
-import Hello from './Hello';
+import { Button } from 'react-bootstrap';
 import DocumentPreview from './DocumentPreview';
-import samplePdf from './samplePdf';
 import FillerContent from './FillerContent';
+import multiPagePdf from './multiPagePdf';
+import mixedOrientationPdf from './mixedOrientationPdf';
 
 const styles = {
     fontFamily: 'sans-serif',
     textAlign: 'center'
 };
 
-const App = () => (
-    <div style={styles}>
-        <FillerContent />
-        <DocumentPreview
-            file={`data:application/pdf;base64,${samplePdf}`}
-            footer={<div>my footer</div>}
-        />
-    </div>
-);
+const multiPagePdfFile = `data:application/pdf;base64,${multiPagePdf}`;
+const mixedOrientationPdfFile = `data:application/pdf;base64,${mixedOrientationPdf}`;
+
+class App extends React.Component {
+    state = {
+        show: true,
+        file: multiPagePdfFile
+    };
+    preview = file => {
+        return this.setState({ show: true, file: file });
+    };
+    render = () => (
+        <div style={styles}>
+            <Button
+                bsStyle="primary"
+                onClick={this.preview.bind(this, multiPagePdfFile)}
+            >
+                Show Multi Page Pdf
+            </Button>
+            <Button
+                bsStyle="primary"
+                onClick={this.preview.bind(this, mixedOrientationPdfFile)}
+            >
+                Show Mixed Orientation Pdf
+            </Button>
+            <FillerContent />
+            {this.state.show && (
+                <DocumentPreview
+                    show={this.state.show}
+                    file={this.state.file}
+                    onClose={() => this.setState({ show: false })}
+                    toolbar={
+                        <div>
+                            <button className="btn btn-primary">
+                                Download
+                            </button>
+                        </div>
+                    }
+                    footer={<div>my footer</div>}
+                />
+            )}
+        </div>
+    );
+}
 
 render(<App />, document.getElementById('root'));
